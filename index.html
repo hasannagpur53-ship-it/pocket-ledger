@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pocket Ledger</title>
 <meta name="description" content="A simple ledger for your money. Sign in to keep your payments in sync across devices.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1c1917">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ledger">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
@@ -135,11 +142,11 @@ fieldset.seg{border:0;margin:0;padding:0;min-width:0}
 </head>
 <body>
 
-<div class="wrap" id="fatal" hidden><div class="card"><h2>Pocket Ledger could not start</h2><p class="lead" id="fatalMsg"></p></div></div>
+<div class="wrap" id="fatal" hidden><div class="card"><h2><span data-app-name>Pocket Ledger</span> could not start</h2><p class="lead" id="fatalMsg"></p></div></div>
 
 <div class="wrap" id="authView" hidden>
   <div class="authbox">
-    <div class="brand">Pocket Ledger</div>
+    <div class="brand" data-app-name>Pocket Ledger</div>
     <p class="lead">Track what you spend and keep it in sync on every device.</p>
     <section class="card">
       <div class="tabs" id="authTabs"><button type="button" data-m="in" class="on" aria-pressed="true">Sign in</button><button type="button" data-m="up" aria-pressed="false">Create account</button></div>
@@ -157,7 +164,7 @@ fieldset.seg{border:0;margin:0;padding:0;min-width:0}
 
 <div class="wrap" id="recView" hidden>
   <div class="authbox">
-    <div class="brand">Pocket Ledger</div>
+    <div class="brand" data-app-name>Pocket Ledger</div>
     <section class="card">
       <h2>Choose a new password</h2>
       <form id="recForm" style="margin-top:12px" novalidate>
@@ -172,7 +179,7 @@ fieldset.seg{border:0;margin:0;padding:0;min-width:0}
 
 <main id="appView" hidden>
 <div class="bar-top">
-  <div class="brand">Pocket Ledger</div>
+  <div class="brand" data-app-name>Pocket Ledger</div>
   <button class="btn ghost sm" id="menuBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menu">Menu</button>
   <div class="menu" id="menu" hidden>
     <button type="button" data-v="ledger" class="on">Ledger</button>
@@ -275,7 +282,7 @@ fieldset.seg{border:0;margin:0;padding:0;min-width:0}
     </div>
     <div class="group">
       <h3>Import</h3>
-      <p class="note" style="margin-top:4px">Use a CSV exported from this app, or a backup file from the earlier Pocket Ledger page. Payments you already have are skipped, so importing the same file twice is safe.</p>
+      <p class="note" style="margin-top:4px">Use a CSV exported from this app, or a backup file from the earlier one-page version of this app. Payments you already have are skipped, so importing the same file twice is safe.</p>
       <div class="row" style="margin-top:12px"><label class="btn ghost sm" for="impFile" style="margin:0;color:var(--ink);font-size:14px;cursor:pointer">Choose a file</label><input id="impFile" type="file" accept=".json,.csv,text/csv,application/json" hidden></div>
       <details class="fold"><summary>Or paste the text</summary><textarea id="impText" rows="4" aria-label="Pasted backup or CSV text"></textarea><div class="row" style="margin-top:8px"><button class="btn ghost sm" id="impRead" type="button">Read it</button></div></details>
       <p class="note" id="impMsg" role="status" style="margin-top:10px"></p>
@@ -300,7 +307,10 @@ fieldset.seg{border:0;margin:0;padding:0;min-width:0}
 (function(){
 'use strict';
 /* The publishable key is meant to be public. Row-level security in the database protects the data. */
-var CONFIG={url:'https://oybtdsrqqnxmkwitzoot.supabase.co',key:'sb_publishable_3Q3edqHre0RqXEwgec5Fig_epFeIXeV'};
+/* name is the working title. Change it here (and in manifest.webmanifest) when the final name is chosen. */
+var CONFIG={name:'Pocket Ledger',url:'https://oybtdsrqqnxmkwitzoot.supabase.co',key:'sb_publishable_3Q3edqHre0RqXEwgec5Fig_epFeIXeV'};
+document.title=CONFIG.name;
+[].forEach.call(document.querySelectorAll('[data-app-name]'),function(n){n.textContent=CONFIG.name});
 
 var $=function(id){return document.getElementById(id)};
 var h=function(t,a){var e=document.createElement(t);if(a)for(var x in a){if(x==='on'){for(var ev in a.on)e.addEventListener(ev,a.on[ev])}else if(x==='text')e.textContent=a[x];else if(x==='class')e.className=a[x];else e.setAttribute(x,a[x])}
@@ -608,7 +618,7 @@ $('expCsv').onclick=function(){
     if(!rows.length){m.textContent='There is nothing to export yet.';return}
     var esc=function(v){v=String(v==null?'':v);if(/^[=+\-@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'};
     var lines=[['date','type','method','category','amount','note']].concat(rows.map(function(t){return [t.occurred_on,t.direction==='out'?'spent':'received',kindOf(t),catName(t.category_id),(t.amount_minor/100).toFixed(2),t.note||'']}));
-    download('pocket-ledger-'+today()+'.csv',lines.map(function(r){return r.map(esc).join(',')}).join('\n'));m.textContent='Downloaded '+rows.length+' payments.'}).catch(function(e){m.textContent=errText(e)})};
+    download(CONFIG.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')+'-'+today()+'.csv',lines.map(function(r){return r.map(esc).join(',')}).join('\n'));m.textContent='Downloaded '+rows.length+' payments.'}).catch(function(e){m.textContent=errText(e)})};
 
 function csvRows(t){
   var rows=[],row=[],cur='',inq=false;
@@ -663,6 +673,10 @@ $('impGo').onclick=function(){
 setMode('in');$('rcatWrap').hidden=false;
 $('rstart').value=today();
 })();
+</script>
+<script>
+/* Lets the app install on phones and computers. Skipped when the page is opened as a plain file. */
+if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
 </script>
 </body>
 </html>

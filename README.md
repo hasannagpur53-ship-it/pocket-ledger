@@ -30,7 +30,34 @@ Then try: add a payment, edit it, delete it and tap Undo, add a recurring paymen
 
 ## 4. Keep the free project awake
 
-On the free plan, Supabase pauses a project that gets no requests for 7 days. While you have few users, set up a free scheduled ping (for example a GitHub Actions workflow or a free uptime monitor) that opens your site's address once a day. Upgrading the plan removes the pause.
+On the free plan, Supabase pauses a project that gets no requests for 7 days. Opening the website does not count, because the page itself is static. The ping has to call the database. In your repository create the file `.github/workflows/keepalive.yml` with this content:
+
+```yaml
+name: keepalive
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -fsS "https://oybtdsrqqnxmkwitzoot.supabase.co/rest/v1/workspaces?select=id&limit=1" \
+            -H "apikey: sb_publishable_3Q3edqHre0RqXEwgec5Fig_epFeIXeV"
+```
+
+Then open the **Actions** tab, choose **keepalive**, and press **Run workflow** once to check it. Upgrading the Supabase plan removes the pause.
+
+## 5. Install it like an app
+
+The site can be installed. On a phone, open the site in Chrome, tap the menu, and choose **Install app** or **Add to Home screen** (on iPhone use Safari, then Share, then **Add to Home Screen**). On a computer, Chrome and Edge show an install icon in the address bar. The app opens in its own window with its own icon. It still needs an internet connection to load and save payments.
+
+Upload these files to the repository together: `index.html`, `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`, `icon-maskable-512.png`, `apple-touch-icon.png`.
+
+## 6. Changing the app's name
+
+The name is a working title. To rename the app, change `name` in the `CONFIG` line near the top of the script in `index.html`, and `name` in `manifest.webmanifest`. Also update the `<title>` text if you like. Everything else on screen follows automatically. Before choosing a final name, check that the .com or .app domain is free, that no similar finance app is in the app stores, and the free trademark searches (USPTO, EUIPO, IP India).
 
 ## Safety notes
 
